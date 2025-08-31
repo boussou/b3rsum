@@ -29,6 +29,7 @@
 #  - GNU Bash
 #  - GNU b3sum which is part of the coreutils package.
 #  - GNU Getopt which is part of the util-linux package.
+#  - GNU parallel for improved performance.
 #
 #------------------------------------------------------------------------
 # Changelog
@@ -115,7 +116,7 @@ check_output_file() {
 check_dependencies() {
 	# Returns 0 if dependencies are installed, non-zero otherwise
 	local -a DEPENDENCIES dep result
-	DEPENDENCIES=( "b3sum" "getopt" )
+	DEPENDENCIES=( "b3sum" "getopt" "parallel" )
 	result=0
 	for dep in "${DEPENDENCIES[@]}"; do
 		command -v "$dep" > /dev/null 2>&1
@@ -221,7 +222,7 @@ cmd_create() {
 			EXEC='cat - | b3sum $([[ ${#B3SUM_OPTS[*]} -ge 1 ]] && printf "%s" "${B3SUM_OPTS[*]}") -'
 		elif [[ -e "$item" ]]; then
 			# shellcheck disable=SC2016
-			EXEC='find -L "$item" -type f ! -name "$OUTPUT_FILE" -print0 | xargs -0 b3sum $([[ ${#B3SUM_OPTS[*]} -ge 1 ]] && printf "%s" "${B3SUM_OPTS[*]}")'
+			EXEC='find -L "$item" -type f ! -name "$OUTPUT_FILE" -print0 | parallel -0 b3sum $([[ ${#B3SUM_OPTS[*]} -ge 1 ]] && printf "%s" "${B3SUM_OPTS[*]}") {}'
 		else
 			# shellcheck disable=SC2016
 			EXEC='warn "File '$item' not found, skipping..."'
